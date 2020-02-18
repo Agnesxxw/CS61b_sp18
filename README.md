@@ -1,7 +1,7 @@
 # CS61b_sp18
-1. Course notes,
-2. Prject description and innovation
-3. Homework correction
-4. Lab report
+### 1. Course notes
+### 2. Project 
+### 3. Homework 
+### 4. Lab 
 
-FRESHMAN BUT LOVE CODING
+## FRESHMAN BUT LOVE CODING
