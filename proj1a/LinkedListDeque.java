@@ -1,3 +1,8 @@
+/**
+ * ArrayDeque
+ * @author Agnesxxw
+ */
+
 public class LinkedListDeque<typ>{
 
     public class Node{
@@ -23,7 +28,7 @@ public class LinkedListDeque<typ>{
     }
 
     /**
-     * sentinel.next is teh first node.
+     * sentinel.next is the first node.
      */
 
     /** Adds an item of type typ to the front of the deque. */

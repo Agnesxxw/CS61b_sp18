@@ -22,7 +22,7 @@ public class LeapYear {
         }
         for (int i = 0; i < args.length; i++) {
             try {
-                int year = Integer.parseInt(args[i]);
+                int year = 2000;
                 checkLeapYear(year);
             } catch (NumberFormatException e) {
                 System.out.printf("%s is not a valid number.\n", args[i]);
