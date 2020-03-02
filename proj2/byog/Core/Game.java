@@ -2,17 +2,179 @@ package byog.Core;
 
 import byog.TileEngine.TERenderer;
 import byog.TileEngine.TETile;
+import byog.TileEngine.Tileset;
+import java.awt.Font;
+import edu.princeton.cs.introcs.StdDraw;
 
 public class Game {
     TERenderer ter = new TERenderer();
     /* Feel free to change the width and height. */
     public static final int WIDTH = 80;
     public static final int HEIGHT = 30;
+    public static final int welcomeBoardX = 300;
+    public static final int welcomeBoardY = 400;
+    Font font1 = new Font("Times New Roman", Font.BOLD, 50);
+    Font font2 = new Font("Times New Roman", Font.PLAIN, 30);
+
+    /// Instance members
+    private boolean setupMode = true;     // flag to check whether setup has been done
+    private boolean newGameMode = false; // flag to check whether a new game is gonna be generated
+    private boolean quitMode = false; // flag to check whether a game is supposed to be quited
+    private String seedString = ""; // store input random seed numbers as String
+
+    private TETile[][] world;
+    private int playerX;
+    private int playerY;
+
+    private void switchSetupMode() {
+        setupMode = !setupMode;
+    }
+
+    private void switchNewGameMode() {
+        newGameMode = !newGameMode;
+    }
+
+    private void switchQuitMode() {
+        quitMode = !quitMode;
+    }
+
+    private void processWelcome() {
+
+        // prepare welcome board window
+        StdDraw.enableDoubleBuffering();
+        StdDraw.setCanvasSize(welcomeBoardX, welcomeBoardY);
+        StdDraw.clear(StdDraw.PINK);
+
+        while (true) {
+            if (StdDraw.hasNextKeyTyped()) {//tells you whether the user has typed a key (that your program has not yet processed)
+                String typed = Character.toString(StdDraw.nextKeyTyped());
+                processInput(typed);
+            }
+
+            DisplayWelcome();
+
+            if (!setupMode) {   // break after setup has been done and enter game mode
+                break;
+            }
+        }
+        processGame();
+    }
+
+    /*
+    Display welcome message
+     */
+    public void DisplayWelcome(){
+
+        /** initialize the canvas */
+        StdDraw.clear(StdDraw.PINK);
+        StdDraw.setPenColor(StdDraw.WHITE);
+        StdDraw.setFont(font1);
+        StdDraw.text(0.5, 0.8, "Welcome to the random world!");
+
+        StdDraw.setFont(font2);
+        StdDraw.text(0.5, 0.5, "New Game: N");
+        StdDraw.text(0.5, 0.475, "Load Game: L");
+        StdDraw.text(0.5, 0.45, "Quit: Q");
+
+    }
+
+    /**
+     *
+     * @param input the input from keyboard
+     */
+    private void processInput(String input){
+        if (input == null) {
+            System.out.println("No input given.");
+            System.exit(0);
+        }
+
+        String first = Character.toString(input.charAt(0));
+        first = first.toLowerCase(); // normalize an input to lower case
+        processInputString(first);
+
+        if (input.length() > 1) {
+            String rest = input.substring(1);
+            processInput(rest); // recursive call until input ends
+        }
+    }
+
+    /* Processes game according to a given single input String */
+    private void processInputString(String first) {
+
+        if (setupMode) {      // when the setup hasn't been done
+            switch (first) {
+                case "n":       // new game gonna be generated
+                    switchNewGameMode();
+                    break;
+                case "s":       // setup a new game
+                    setupNewGame();
+                    break;
+                case "l":       // load the previously saved game
+                    load();
+                    break;
+                case "q":
+                    System.exit(0);
+                    break;
+                default:        // append next seed integer to seedString
+                    try {
+                        Long.parseLong(first);
+                        seedString += first;
+                    } catch (NumberFormatException e) { // exit program if input is invalid
+                        System.out.println("Invalid input given: " + first);
+                        System.exit(0);
+                    }
+                    break;
+            }
+        } else {                // when the setup has been done
+            switch (first) {
+                // @Note: Add my keyboard preferences
+                case NORTH:
+                case "o":
+                case EAST:
+                case "l":
+                case SOUTH:
+                case "n":
+                case WEST:
+                case "k":
+                    move(first);
+                    break;
+                case ":":
+                    switchQuitMode();
+                    break;
+                case "q":
+                    saveAndQuit();
+                    System.exit(0);
+                    break;
+                default:
+            }
+        }
+    }
+
+    private void processGame(){}
+    /* Generates a randomized world and put a player in it */
+    private void setupNewGame() {}
+
+    /* Load the previous world */
+    private void load(){
+
+    }
+
+
+    private void move(String first){}
+
+
+    /* Helper method for load method: rewrite playerX, playerY */
+    private void rewritePlayerLocation() {}
+
+
+    /** quit this world and save it */
+    private void saveAndQuit(){}
 
     /**
      * Method used for playing a fresh game. The game should start from the main menu.
      */
     public void playWithKeyboard() {
+        processWelcome();
     }
 
     /**
@@ -35,4 +197,5 @@ public class Game {
         TETile[][] finalWorldFrame = null;
         return finalWorldFrame;
     }
+
 }
