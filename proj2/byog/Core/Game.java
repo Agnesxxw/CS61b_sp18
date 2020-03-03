@@ -26,42 +26,19 @@ public class Game {
     private int playerX;
     private int playerY;
 
-    private void switchSetupMode() {
-        setupMode = !setupMode;
-    }
-
-    private void switchNewGameMode() {
-        newGameMode = !newGameMode;
-    }
-
-    private void switchQuitMode() {
-        quitMode = !quitMode;
-    }
-
+    /**
+     * Display welcome msg
+     */
     private void processWelcome() {
 
         // prepare welcome board window
         StdDraw.enableDoubleBuffering();
         StdDraw.setCanvasSize(welcomeBoardX, welcomeBoardY);
         StdDraw.clear(StdDraw.PINK);
-
-        while (true) {
-            if (StdDraw.hasNextKeyTyped()) {//tells you whether the user has typed a key (that your program has not yet processed)
-                String typed = Character.toString(StdDraw.nextKeyTyped());
-                processInput(typed);
-            }
-
-            DisplayWelcome();
-
-            if (!setupMode) {   // break after setup has been done and enter game mode
-                break;
-            }
-        }
-        processGame();
     }
 
-    /*
-    Display welcome message
+    /**
+     * Display welcome message on welcome board
      */
     public void DisplayWelcome(){
 
@@ -78,104 +55,6 @@ public class Game {
 
     }
 
-    /**
-     *
-     * @param input the input from keyboard
-     */
-    private void processInput(String input){
-        if (input == null) {
-            System.out.println("No input given.");
-            System.exit(0);
-        }
-
-        String first = Character.toString(input.charAt(0));
-        first = first.toLowerCase(); // normalize an input to lower case
-        processInputString(first);
-
-        if (input.length() > 1) {
-            String rest = input.substring(1);
-            processInput(rest); // recursive call until input ends
-        }
-    }
-
-    /* Processes game according to a given single input String */
-    private void processInputString(String first) {
-
-        if (setupMode) {      // when the setup hasn't been done
-            switch (first) {
-                case "n":       // new game gonna be generated
-                    switchNewGameMode();
-                    break;
-                case "s":       // setup a new game
-                    setupNewGame();
-                    break;
-                case "l":       // load the previously saved game
-                    load();
-                    break;
-                case "q":
-                    System.exit(0);
-                    break;
-                default:        // append next seed integer to seedString
-                    try {
-                        Long.parseLong(first);
-                        seedString += first;
-                    } catch (NumberFormatException e) { // exit program if input is invalid
-                        System.out.println("Invalid input given: " + first);
-                        System.exit(0);
-                    }
-                    break;
-            }
-        } else {                // when the setup has been done
-            switch (first) {
-                // @Note: Add my keyboard preferences
-                case NORTH:
-                case "o":
-                case EAST:
-                case "l":
-                case SOUTH:
-                case "n":
-                case WEST:
-                case "k":
-                    move(first);
-                    break;
-                case ":":
-                    switchQuitMode();
-                    break;
-                case "q":
-                    saveAndQuit();
-                    System.exit(0);
-                    break;
-                default:
-            }
-        }
-    }
-
-    private void processGame(){}
-    /* Generates a randomized world and put a player in it */
-    private void setupNewGame() {}
-
-    /* Load the previous world */
-    private void load(){
-
-    }
-
-
-    private void move(String first){}
-
-
-    /* Helper method for load method: rewrite playerX, playerY */
-    private void rewritePlayerLocation() {}
-
-
-    /** quit this world and save it */
-    private void saveAndQuit(){}
-
-    /**
-     * Method used for playing a fresh game. The game should start from the main menu.
-     */
-    public void playWithKeyboard() {
-        processWelcome();
-    }
 
     /**
      * Method used for autograding and testing the game code. The input string will be a series
@@ -195,6 +74,7 @@ public class Game {
         // drawn if the same inputs had been given to playWithKeyboard().
 
         TETile[][] finalWorldFrame = null;
+        Dra
         return finalWorldFrame;
     }
 
