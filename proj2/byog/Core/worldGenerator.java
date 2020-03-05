@@ -1,22 +1,18 @@
-/**
- * @author: Agnes Xu
- * @date: 2020/3/3
- * @version: 1.0
- */
-
 package byog.Core;
-/**
- * Random world generator
- */
+
+
 import byog.TileEngine.TERenderer;
 import byog.TileEngine.TETile;
 import byog.TileEngine.Tileset;
+
 import java.util.Random;
 import java.util.List;
 import java.util.LinkedList;
 
-public class worldGenerator {
 
+class WorldGenerator {
+
+    /// Static members
     private static final int MAXROOMWIDTH = 6;
     private static final int MAXROOMHEIGHT = 6;
     private static final String NORTH = "N";
@@ -24,11 +20,16 @@ public class worldGenerator {
     private static final String SOUTH = "S";
     private static final String WEST = "W";
 
+
+    /// Instance members
     private int width;
     private int height;
     private Position initialPosition;
     private Random random;
     private TETile[][] world;
+
+
+    /// Constructors
 
     /**
      * Returns WorldGenerator object without random seed specified
@@ -38,7 +39,7 @@ public class worldGenerator {
      * @param initialX x coordinate of initial LOCKED_DOOR
      * @param initialY y coordinate of initial LOCKED_DOOR
      */
-    worldGenerator(int w, int h, int initialX, int initialY) {
+    WorldGenerator(int w, int h, int initialX, int initialY) {
         width = w;
         height = h;
         initialPosition = new Position(initialX, initialY);
@@ -54,29 +55,28 @@ public class worldGenerator {
      * @param initialY y coordinate of initial LOCKED_DOOR
      * @param seed     random seed used to generate world
      */
-    worldGenerator(int w, int h, int initialX, int initialY, long seed) {
+    WorldGenerator(int w, int h, int initialX, int initialY, long seed) {
         width = w;
         height = h;
         initialPosition = new Position(initialX, initialY);
         random = new Random(seed);
     }
 
-    /**
-     * Position coordinate
-     */
-    public static class Position {
+
+    /// Nested class for easy access to x, y coordinates
+    private class Position {
         int x;
         int y;
 
-        public Position(int xx, int yy) {
+        Position(int xx, int yy) {
             x = xx;
             y = yy;
         }
     }
 
-    /**
-     * World initialization
-     */
+
+    /// Private methods
+    /* Initializes a world filling everything with NOTHING */
     private void initialize() {
         world = new TETile[width][height];
         for (int w = 0; w < width; w += 1) {
@@ -86,225 +86,187 @@ public class worldGenerator {
         }
     }
 
-    /**
-     * generate a single room
-     * @param lb left-bottom coordination of the rectangle
-     * @param rt right-top coordination of the rectangle
-     */
-    private void generateRoom(Position lb, Position rt){
-        int lbx = lb.x;
-        int lby = lb.y;
-        int rtx = rt.x;
-        int rty = rt.y;
+    /* Makes rectangular room filled with FLOOR and surrounded by WALL */
+    private void makeRoom(Position leftBottom, Position rightUpper) {
+        int leftBottomX = leftBottom.x;
+        int leftBottomY = leftBottom.y;
+        int rightUpperX = rightUpper.x;
+        int rightUpperY = rightUpper.y;
 
-        for(int x = lbx; x <= rtx; lbx += 1){
-            for(int y = lby; y <= lby; y += 1){
-                if(y == rty || y == lby || x == lbx || x == rtx){ // Draw the wall of room
-                    world[x][y] = Tileset.FLOWER;
-                }else{
-                    world[x][y] = Tileset.GRASS;
+        for (int x = leftBottomX; x <= rightUpperX; x += 1) {
+            for (int y = leftBottomY; y <= rightUpperY; y += 1) {
+                if (x == leftBottomX
+                        || x == rightUpperX
+                        || y == leftBottomY
+                        || y == rightUpperY) {
+                    world[x][y] = Tileset.WALL;
+                } else {
+                    world[x][y] = Tileset.FLOOR;
                 }
             }
         }
     }
 
-    /**
-     * initial entrance
-     * @param e initial position
-     */
-    private void entrance(Position e){
-        world[e.x][e.y] = Tileset.LOCKED_DOOR;
+    /* Makes initial entrance */
+    private void makeInitialEntrance(Position initialEntryPosition) {
+        world[initialEntryPosition.x][initialEntryPosition.y] = Tileset.LOCKED_DOOR;
     }
 
-    /* Generate entrance by changing WALL to FLOOR at entryPoint */
-    private void generateEntrance(Position point) {
-        world[point.x][point.y] = Tileset.GRASS;
+    /* Makes entrance by changing WALL to FLOOR at entryPoint */
+    private void makeEntrance(Position entryPoint) {
+        world[entryPoint.x][entryPoint.y] = Tileset.FLOOR;
     }
 
-    /* Generate exit by changing WALL to FLOOR at entryPoint */
-    private void Exit(Position exitPoint) {
-        world[exitPoint.x][exitPoint.y] = Tileset.GRASS;
+    /* Makes exit by changing WALL to FLOOR at entryPoint */
+    private void makeExit(Position exitPoint) {
+        world[exitPoint.x][exitPoint.y] = Tileset.FLOOR;
     }
 
-    /**
-     * Check if the new random room is available
-     * @param lb left-bottom coordination of the rectangle
-     * @param rt right-top coordination of the rectangle
-     */
-    private boolean checkAvailability(Position lb, Position rt){
-        int lbx = lb.x;
-        int lby = lb.y;
-        int rtx = rt.x;
-        int rty = rt.y;
-        if(lbx < 0 || lby < 0 || rtx < 0 || rty < 0
-                || lbx >= width || lby >= height || rtx >= width || rty >= height){
+    /* Checks availability for a given rectangular space to add another room */
+    private boolean checkAvailability(Position leftBottom, Position rightUpper) {
+        int leftBottomX = leftBottom.x;
+        int leftBottomY = leftBottom.y;
+        int rightUpperX = rightUpper.x;
+        int rightUpperY = rightUpper.y;
+
+        if (leftBottomX < 0 || width <= leftBottomX
+                || leftBottomY < 0 || height <= leftBottomY
+                || rightUpperX < 0 || width <= rightUpperX
+                || rightUpperY < 0 || height <= rightUpperY) {
             return false;
         }
-        for(int x = lbx; x <= rtx; lbx += 1){
-            for(int y = lby; y <= lby; y += 1){
+
+        for (int x = leftBottomX; x <= rightUpperX; x += 1) {
+            for (int y = leftBottomY; y <= rightUpperY; y += 1) {
                 TETile currentTile = world[x][y];
-                if(currentTile == Tileset.FLOWER || currentTile == Tileset.GRASS){ // if current tile has been taken
+                if (currentTile == Tileset.WALL || currentTile == Tileset.FLOOR) {
                     return false;
                 }
             }
         }
+
         return true;
     }
 
-    /**
-     * return new direction if this direction isn't available
-     * @param direction
-     * @return new direction
-     */
-    private String getReverseDirc(String direction){
-        switch (direction){
+    /* Returns random positions for a new room on the north of entryPosition if available,
+    otherwise returns null */
+    private Position[] randomPositionNorth(int w, int h, Position entryPosition) {
+        int entryPositionX = entryPosition.x;
+        int entryPositionY = entryPosition.y;
+        int leftBottomX = entryPositionX - random.nextInt(w) - 1;
+        int leftBottomY = entryPositionY;
+        int rightUpperX = leftBottomX + w + 1;
+        int rightUpperY = leftBottomY + h + 1;
+        Position leftBottom = new Position(leftBottomX, leftBottomY);
+        Position rightUpper = new Position(rightUpperX, rightUpperY);
+        if (!checkAvailability(leftBottom, rightUpper)) {
+            return null;
+        } else {
+            return new Position[]{leftBottom, rightUpper};
+        }
+    }
+
+    /* Returns random positions for a new room on the east of entryPosition if available,
+    otherwise returns null */
+    private Position[] randomPositionEast(int w, int h, Position entryPosition) {
+        int entryPositionX = entryPosition.x;
+        int entryPositionY = entryPosition.y;
+        int leftBottomX = entryPositionX;
+        int leftBottomY = entryPositionY - random.nextInt(h) - 1;
+        int rightUpperX = leftBottomX + w + 1;
+        int rightUpperY = leftBottomY + h + 1;
+        Position leftBottom = new Position(leftBottomX, leftBottomY);
+        Position rightUpper = new Position(rightUpperX, rightUpperY);
+        if (!checkAvailability(leftBottom, rightUpper)) {
+            return null;
+        } else {
+            return new Position[]{leftBottom, rightUpper};
+        }
+    }
+
+    /* Returns random positions for a new room on the south of entryPosition if available,
+    otherwise returns null */
+    private Position[] randomPositionSouth(int w, int h, Position entryPosition) {
+        int entryPositionX = entryPosition.x;
+        int entryPositionY = entryPosition.y;
+        int rightUpperX = entryPositionX + random.nextInt(w) + 1;
+        int rightUpperY = entryPositionY;
+        int leftBottomX = rightUpperX - w - 1;
+        int leftBottomY = rightUpperY - h - 1;
+        Position leftBottom = new Position(leftBottomX, leftBottomY);
+        Position rightUpper = new Position(rightUpperX, rightUpperY);
+        if (!checkAvailability(leftBottom, rightUpper)) {
+            return null;
+        } else {
+            return new Position[]{leftBottom, rightUpper};
+        }
+    }
+
+    /* Returns random positions for a new room on the west of entryPosition if available,
+    otherwise returns null */
+    private Position[] randomPositionWest(int w, int h, Position entryPosition) {
+        int entryPositionX = entryPosition.x;
+        int entryPositionY = entryPosition.y;
+        int rightUpperX = entryPositionX;
+        int rightUpperY = entryPositionY + random.nextInt(h) + 1;
+        int leftBottomX = rightUpperX - w - 1;
+        int leftBottomY = rightUpperY - h - 1;
+        Position leftBottom = new Position(leftBottomX, leftBottomY);
+        Position rightUpper = new Position(rightUpperX, rightUpperY);
+        if (!checkAvailability(leftBottom, rightUpper)) {
+            return null;
+        } else {
+            return new Position[]{leftBottom, rightUpper};
+        }
+    }
+
+    /* Returns the reverse direction of a given direction */
+    private String getReverseDirection(String direction) {
+        switch (direction) {
             case NORTH:
                 return SOUTH;
+            case EAST:
+                return WEST;
             case SOUTH:
                 return NORTH;
-            case WEST:
-                return EAST;
             default:
-                return WEST;
+                return EAST;
         }
     }
 
-    /**
-     * return the random new room position[leftbottom, righttop] coordinate in the north
-     * @param point start point
-     * @param W width of the room
-     * @param H height of the room
-     * @return the new coordination of northroom
-     */
-    private Position[] newNorthPosition(Position point, int W, int H){
-        int px = point.x;
-        int py = point.y;
-        int newlbx = px - 1 - random.nextInt(W);
-        int newlby = py;
-        int newrtx = newlbx + W + 1;
-        int newrty = newlby + H + 1;
-        Position newlb = new Position(newlbx, newlby);
-        Position newrt = new Position(newrtx, newrty);
-        Position[] newPosition = new Position[]{newlb, newrt};
-        if(!checkAvailability(newlb, newrt)){
-            return null;
-        }else{
-            return newPosition;
-        }
-    }
-
-    /**
-     * return the random new room position[leftbottom, righttop] coordinate in the east
-     * @param point start point
-     * @param W width of the room
-     * @param H height of the room
-     * @return the new coordination of eastroom
-     */
-    private Position[] newEastPosition(Position point, int W, int H) {
-        int px = point.x;
-        int py = point.y;
-        int newlbx = px;
-        int newlby = py - random.nextInt(H) - 1;
-        int newrtx = newlbx + W + 1;
-        int newrty = newlby + H + 1;
-        Position newlb = new Position(newlbx, newlby);
-        Position newrt = new Position(newrtx, newrty);
-        Position[] newPosition = new Position[]{newlb, newrt};
-        if (!checkAvailability(newlb, newrt)) {
-            return null;
-        } else {
-            return newPosition;
-        }
-    }
-
-    /**
-     * return the random new room position[leftbottom, righttop] coordinate in the west
-     * @param point start point
-     * @param W width of the room
-     * @param H height of the room
-     * @return the new coordination of westroom
-     */
-    private Position[] newWestPosition(Position point, int W, int H) {
-        int px = point.x;
-        int py = point.y;
-        int newrtx = px;
-        int newrty = py + random.nextInt(H) + 1;
-        int newlbx = newrtx - W - 1;
-        int newlby = newrty - H - 1;
-        Position newlb = new Position(newlbx, newlby);
-        Position newrt = new Position(newrtx, newrty);
-        Position[] newPosition = new Position[]{newlb, newrt};
-        if (!checkAvailability(newlb, newrt)) {
-            return null;
-        } else {
-            return newPosition;
-        }
-    }
-
-    /**
-     * return the random new room position[leftbottom, righttop] coordinate in the south
-     * @param point start point
-     * @param W width of the room
-     * @param H height of the room
-     * @return the new coordination of southroom
-     */
-    private Position[] newSouthPosition(Position point, int W, int H) {
-        int px = point.x;
-        int py = point.y;
-        int newrtx = px + random.nextInt(W) + 1;
-        int newrty = py;
-        int newlbx = newrtx - W - 1;
-        int newlby = newrty - H - 1;
-        Position newlb = new Position(newlbx, newlby);
-        Position newrt = new Position(newrtx, newrty);
-        Position[] newPosition = new Position[]{newlb, newrt};
-        if (!checkAvailability(newlb, newrt)) {
-            return null;
-        } else {
-            return newPosition;
-        }
-    }
-
-    /**
-     * Returns random exit position and direction from a given rectangular room
-     * @param leftBottom current room leftbottom coordinate
-     * @param rightTop current room righttop coordinate
-     * @param currentDirection current direction
-     * @return new direction and new position coordinate after move towards the new random direction
-     */
-    private Object[] randomExit(Position leftBottom, Position rightTop, String currentDirection) {
-        int lbX = leftBottom.x;
-        int lbY = leftBottom.y;
-        int rtX = rightTop.x;
-        int rtY = rightTop.y;
-        int w = rtX - lbX - 1;
-        int h = rtY - lbY - 1;
+    /* Returns random exit position and direction from a given rectangular room */
+    private Object[] randomExit(Position leftBottom, Position rightUpper, String currentDirection) {
+        int leftBottomX = leftBottom.x;
+        int leftBottomY = leftBottom.y;
+        int rightUpperX = rightUpper.x;
+        int rightUpperY = rightUpper.y;
+        int w = rightUpperX - leftBottomX - 1;
+        int h = rightUpperY - leftBottomY - 1;
         Object[] exitAndDirection = new Object[2];
 
-        // Decide nextDirection using Linkedlist data structuere
+        // Decide nextDirection
         List<String> directions = new LinkedList<>();
         directions.add(NORTH);
         directions.add(EAST);
         directions.add(SOUTH);
         directions.add(WEST);
-        directions.remove(getReverseDirc(currentDirection)); // prevent back to previous direction
-        // eg : from north to south -> current direction = south, so remove north direction, otherwise, back to original
-        String nextDirection = directions.get(random.nextInt(directions.size())); // then generate a random direction
+        directions.remove(getReverseDirection(currentDirection));
+        String nextDirection = directions.get(random.nextInt(directions.size()));
 
         // Decide next exitPosition
         Position nextExitPosition;
         switch (nextDirection) {
             case NORTH:
-                nextExitPosition = new Position(rtX - random.nextInt(w) - 1, rtY);
+                nextExitPosition = new Position(rightUpperX - random.nextInt(w) - 1, rightUpperY);
                 break;
             case EAST:
-                nextExitPosition = new Position(rtX, rtY - random.nextInt(h) - 1);
+                nextExitPosition = new Position(rightUpperX, rightUpperY - random.nextInt(h) - 1);
                 break;
             case SOUTH:
-                nextExitPosition = new Position(lbX + random.nextInt(w) + 1, lbY);
+                nextExitPosition = new Position(leftBottomX + random.nextInt(w) + 1, leftBottomY);
                 break;
             default:
-                nextExitPosition = new Position(lbX, lbY + random.nextInt(h) + 1);
+                nextExitPosition = new Position(leftBottomX, leftBottomY + random.nextInt(h) + 1);
                 break;
         }
 
@@ -312,16 +274,15 @@ public class worldGenerator {
         exitAndDirection[1] = nextDirection;
         return exitAndDirection;
     }
-    // @aviatesk
+
     /* Makes a mono exit from a given rectangular room and calls another recursiveAddRandomRoom */
-    private void monoExit(Position leftBottom, Position rightTop, String currentDirection) {
-        Object[] exitAndDirection = randomExit(leftBottom, rightTop, currentDirection);
+    private void monoExit(Position leftBottom, Position rightUpper, String currentDirection) {
+        Object[] exitAndDirection = randomExit(leftBottom, rightUpper, currentDirection);
         Position nextExitPosition = (Position) exitAndDirection[0];
         String nextDirection = (String) exitAndDirection[1];
         recursiveAddRandomRoom(nextExitPosition, nextDirection);
     }
 
-    // @aviatesk
     /* Makes bi exits from a given rectangular room and calls another recursiveAddRandomRoom */
     private void biExit(Position leftBottom, Position rightUpper, String currentDirection) {
         Object[] exitAndDirection1 = randomExit(leftBottom, rightUpper, currentDirection);
@@ -340,7 +301,7 @@ public class worldGenerator {
         recursiveAddRandomRoom(nextExitPosition1, nextDirection1);
         recursiveAddRandomRoom(nextExitPosition2, nextDirection2);
     }
-    // @aviatesk
+
     /* Makes tri exits from a given rectangular room and calls another recursiveAddRandomRoom */
     private void triExit(Position leftBottom, Position rightUpper, String currentDirection) {
         Object[] exitAndDirection1 = randomExit(leftBottom, rightUpper, currentDirection);
@@ -370,7 +331,7 @@ public class worldGenerator {
         recursiveAddRandomRoom(nextExitPosition3, nextDirection3);
     }
 
-    // @aviatesk
+
     /* Recursively adds random rooms */
     private void recursiveAddRandomRoom(Position exitPosition, String currentDirection) {
 
@@ -384,29 +345,29 @@ public class worldGenerator {
         switch (currentDirection) {
             case NORTH:
                 entryPosition = new Position(exitX, exitY + 1);
-                lrPositions = newNorthPosition(entryPosition, w, h);
+                lrPositions = randomPositionNorth(w, h, entryPosition);
                 break;
             case EAST:
                 entryPosition = new Position(exitX + 1, exitY);
-                lrPositions = newEastPosition(entryPosition, w, h);
+                lrPositions = randomPositionEast(w, h, entryPosition);
                 break;
             case SOUTH:
                 entryPosition = new Position(exitX, exitY - 1);
-                lrPositions = newSouthPosition(entryPosition, w, h);
+                lrPositions = randomPositionSouth(w, h, entryPosition);
                 break;
             default:
                 entryPosition = new Position(exitX - 1, exitY);
-                lrPositions = newWestPosition(entryPosition, w, h);
+                lrPositions = randomPositionWest(w, h, entryPosition);
                 break;
         }
 
         if (lrPositions != null) {
 
-            Exit(exitPosition);
+            makeExit(exitPosition);
             Position leftBottom = lrPositions[0];
             Position rightUpper = lrPositions[1];
-            generateRoom(leftBottom, rightUpper);
-            entrance(entryPosition);
+            makeRoom(leftBottom, rightUpper);
+            makeEntrance(entryPosition);
 
             switch (random.nextInt(3) + 1) {
                 /* Comment in below for more simpler world */
@@ -423,6 +384,9 @@ public class worldGenerator {
 
     }
 
+
+    // Package-protected methods
+
     /**
      * Returns a world generated with given random seed
      *
@@ -432,17 +396,18 @@ public class worldGenerator {
         initialize();
 
         // Make the first room
-        Position[] lrPositions = newNorthPosition(initialPosition,MAXROOMWIDTH, MAXROOMHEIGHT);
+        Position[] lrPositions = randomPositionNorth(MAXROOMWIDTH, MAXROOMHEIGHT, initialPosition);
         Position leftBottom = lrPositions[0];
-        Position rightTop = lrPositions[1];
-        generateRoom(leftBottom, rightTop);
-        generateEntrance(initialPosition);
+        Position rightUpper = lrPositions[1];
+        makeRoom(leftBottom, rightUpper);
+        makeInitialEntrance(initialPosition);
 
         // Recursively call recursiveAddRandomRoom via first calling triExit
-        triExit(leftBottom, rightTop, NORTH);
+        triExit(leftBottom, rightUpper, NORTH);
 
         return world;
     }
+
 
     // Main method just to check this class works itself
     public static void main(String[] args) {
@@ -450,9 +415,10 @@ public class worldGenerator {
         int h = 50;
         TERenderer ter = new TERenderer();
         ter.initialize(w, h);
-        worldGenerator wg = new worldGenerator(w, h, 40, 5, 42);
+        WorldGenerator wg = new WorldGenerator(w, h, 40, 10, 42);
         wg.initialize();
         wg.generate();
         ter.renderFrame(wg.world);
     }
+
 }
